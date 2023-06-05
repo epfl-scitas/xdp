@@ -1,3 +1,8 @@
+# xdp
+.spack
+spack-manager
+spack-v0.20.0
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

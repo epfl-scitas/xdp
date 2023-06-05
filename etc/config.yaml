@@ -1,0 +1,3 @@
+config:
+  extensions:
+  - /work/proj/xdp/src/spack-xdp
