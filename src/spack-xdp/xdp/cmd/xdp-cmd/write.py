@@ -8,19 +8,13 @@ _subcommands = {}
 
 from pdb import set_trace as st
 
-def setup_parser_args(sub_parser):
-    manifest = sub_parser.add_subparsers(help = 'write spack manifest')
-    packages = sub_parser.add_subparsers(help = 'write packages yaml')
-    modules = subp_arser.add_subparsers(help = 'write modules yaml')
-    repos = sub_parser.add_subparsers(help = 'write repos yaml')
-    compilers = sub_parser.add_subparsers(help = 'write compilers yaml')
-
-def add_command(parser, command_dict):
-    sub_parser = parser.add_parser(
-        "write", help="write spack configuration files")
-    setup_parser_args(sub_parser)
-    command_dict["write"] = write
+def setup_parser(subparser):
+    print(f'setup_parser for write command')
+    manifest = subparser.add_subparsers(help = 'write spack manifest')
+    packages = subparser.add_subparsers(help = 'write packages yaml')
+    modules = subparser.add_subparsers(help = 'write modules yaml')
+    repos = subparser.add_subparsers(help = 'write repos yaml')
+    compilers = subparser.add_subparsers(help = 'write compilers yaml')
 
 def write(parser, args):
     print(f'this is write command')
-

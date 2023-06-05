@@ -11,7 +11,7 @@ _subcommands = {}
 def setup_parser(subparser):
     print(f'this is setup_parser')
     st()
-    sp = subparser.add_subparsers(metavar="xdp-manager commands", dest="xdp_command")
+    sp = subparser.add_subparsers(metavar="xdp commands", dest="xdp_command")
     xdp_cmds.write.add_command(sp, _subcommands)
     xdp_cmds.clone.add_command(sp, _subcommands)
 
