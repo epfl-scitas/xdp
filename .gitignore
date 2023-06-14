@@ -3,6 +3,7 @@
 spack-sdploy
 spack-manager
 spack-v0.20.0
+dev
 dev_setup.sh
 
 # Byte-compiled / optimized / DLL files
