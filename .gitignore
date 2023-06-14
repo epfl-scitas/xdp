@@ -2,6 +2,7 @@
 .spack
 spack-manager
 spack-v0.20.0
+dev_setup.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
