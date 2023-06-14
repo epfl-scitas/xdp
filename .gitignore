@@ -1,5 +1,6 @@
 # xdp
 .spack
+spack-sdploy
 spack-manager
 spack-v0.20.0
 dev_setup.sh
