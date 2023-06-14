@@ -2,6 +2,23 @@
 
 eXtended Deploy - define and deploy a software stack over different architectures using Spack
 
+## general overview
+
+The goal of xdp is to install a software stack (defined in the stack file) on a given
+platform (defined in the platform file). This is acheived by designing a stack file
+general enough to support different architectures between hardware platforms.
+
+This is acheived through the use of filters and tokens which are two methods used
+by xdp to read data from the platform file and write the `spack.yaml` file that spack
+is waiting for to install the stack.
+
+Using the filtering mechanism xdp can read the fabrics interconnect declared in the
+platform file and `chose` the corresponding set of variants in the stack file when
+installing the MPI library.
+
+Using the tokens mechanism xdp can read in the platform file the compiler provided by
+the platform OS and then `replace` it in the stack file where needed.
+
 ## the stack file
 
 This is the main file where the packages to be installed are listed. Everything is done
