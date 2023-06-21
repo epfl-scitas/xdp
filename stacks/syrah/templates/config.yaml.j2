@@ -1,0 +1,32 @@
+config:
+{% if 'license_dir' in data.keys() %}
+  license_dir: {{data['license_dir']}}
+{% endif %}
+{% if 'install_tree' in data.keys() %}
+  install_tree:
+    root: {{data['install_tree']}}
+{% endif %}
+{% if 'template_dirs' in data.keys() %}
+  template_dirs:
+  {% for dir in data['template_dirs'] %}
+  - {{ dir }}
+  {% endfor %}
+{% endif %}
+
+#                                             BUILD STAGES #
+{% if 'core_per_socket' in tokens %}
+  build_jobs: {{tokens['core_per_socket']}}
+{% endif %}
+{% if 'build_stage' in data.keys() %}
+  build_stage:
+{% for build_stage in data['build_stage'] %}
+  - {{ build_stage }}
+{% endfor %}
+{% endif %}
+#                                               EXTENSIONS #
+{% if 'extensions' in data.keys() %}
+  extensions:
+{% for extension in data['extensions'] %}
+  - {{ extension }}
+{% endfor %}
+{% endif %}

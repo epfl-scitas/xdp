@@ -1,0 +1,574 @@
+# ------------------------------------------------------------------------------
+# EXAMPLES ON HOW TO WRITE PACKAGE SPECS:
+# 
+#
+#  - pkg1
+#  - pkg2@2.2
+#  - pkg3:
+#      variants: +spec1
+#  - pkg4@1.1:
+#      variants: +spec1
+#  - pkg5:
+#      variants:
+#        common: +spec1
+#  - pkg6@1.2.3:
+#      variants:
+#        common: +spec1
+#      dependencies:
+#        - dep1
+#        - dep2
+#  - pkg7@1.2.3:
+#      dependencies:
+#      - dep1
+#      - dep2
+#  - pkg8@1.2.3:
+#      gpu:
+#        nvidia: ~osmesa
+#        none: +osmesa
+#
+# ------------------------------------------------------------------------------
+# PROGRAMMING ENVIRONMENT SECTION (PE)
+#
+# The PE section follows the syntax: <pe_name>_<stack_name>_<package_name>. for
+# example: intel_stable_compiler. There is a parent child schema that must be
+# respected. The metadata key is ignored for this purpose. The core PE only has
+# one information and does not follow the same schema. Any key under the
+# <package_name> will be seen as a filter or it will be ignored. In the future
+# we may need to introduce a stack key and a dependencies key for the case where
+# we want to compile the compiler or stack libraries with GPU support. For now,
+# the core_compiler should have this name (this means 'core' key and 'compiler'
+# for subkey. We can also set section:core for the core PE.
+core:
+  metadata:
+    section: core
+  compiler: <core_compiler>
+
+# Definitions will show up in spack.yaml as a concatenation
+# of all keys till the value. So for example, the definition for the
+# mpi spec using ethernet is gcc_stable_mpi_ethernet.
+gcc:
+  metadata:
+    section: pe
+  stable:
+    compiler: gcc@11.3.0
+    mpi:
+      infiniband: openmpi@4.1.3 fabrics=ucx +pmi schedulers=slurm ~memchecker ~rsh ^hwloc ~libxml2
+      ethernet: openmpi@4.1.3 fabrics=ucx +pmi schedulers=slurm ~memchecker ~rsh ^hwloc ~libxml2
+    blas: openblas@0.3.20 threads=none +locking
+    blas_parallel: openblas@0.3.20 threads=openmp +locking
+    python3: python@<python3> +tkinter +optimizations ~debug +ssl ~libxml2
+    python2: python@2.7.18 +tkinter ~debug
+    gpu:
+      nvidia: cuda@11.7.0
+      none: "" # This will also be present in spack.yaml.
+               #This also shoes that comments like this are possible.
+
+intel:
+  metadata:
+    section: pe
+  stable:
+    compiler: intel@2021.6.0
+    compiler_spec: intel-oneapi-compilers-classic@2021.6.0
+    mpi: intel-oneapi-mpi
+    blas: intel-oneapi-mkl
+    blas_parallel: intel-oneapi-mkl
+    python3: python@<python3> +tkinter +optimizations ~debug +ssl
+    python2: python@2.7.18 +tkinter ~debug
+    gpu:
+      nvidia: cuda@11.7.0
+      none: ""
+
+# CORE -------------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+
+#  prefer: concretizer will often overlook this
+# require: will fail to concretize if given as a spec
+
+# We should not be forced to declare a core PE if its only use is to show up
+# in the matrix definition - this can be done using variable substitution.
+core_packages:
+  metadata: {section: packages }
+  pe: [core]
+  packages:
+# Simple spec
+    - spec
+# Variants can be added immediatly after the package name
+    - spec having a lot of variants
+  # Variants can also be added using the variants keyword
+    - pkg1:
+        variants: +zlib~readline
+
+# PACKAGE PREFERENCES ----------------------------------------------------------
+# 
+#
+# ------------------------------------------------------------------------------
+
+# The `default` key makes the package appear in packages.yaml
+# Bare in mind that it will also show up in spack.yaml
+    - package1 ~var:
+        default:
+          variants: +variant
+# To specify a version in packages.yaml use the version attribute:
+# If we want the spec to have a different set of different variants
+    - package2:
+        default:
+          version: 1.2.3
+# Both variants and version attributes can be used at the same time
+    - package3:
+        default:
+          version: 1.0.1
+          variants: +zlib
+# Having a different spec in spack.yaml and packages.yaml
+    - package4:
+        variants: +ncurses
+        default:
+          variants: ~ncurses
+
+# PACKAGE DEPENDENCIES ---------------------------------------------------------
+# 
+#
+# ------------------------------------------------------------------------------
+# The following construct add a package with dependencies to spack.yaml
+# - package5^dep1^dep2
+    - package5:
+        dependencies:
+        - dep1
+        - dep2
+# We can specify the variants alongside the dependencies:
+# - package6+var1~var2^dep1^dep2
+    - package6:
+        variants: +var1~var2
+        dependencies:
+        - dep1
+        - dep2
+# We can also specify the variants of the dependencies:
+# - package7 +var1~var2 ^dep1+var3~var4 ^dep2~var5+var6
+    - package7:
+        variants: +var1~var2
+        dependencies:
+        - dep1+var3~var4
+        - dep2~var5+var6
+
+# BLACKLISTING A MODULE --------------------------------------------------------
+# 
+#
+# ------------------------------------------------------------------------------
+    - package8:
+        blacklist: true
+
+# UNKOWN KEYWORDS --------------------------------------------------------------
+# 
+#
+# ------------------------------------------------------------------------------
+# Adding valid yaml syntax does not break the workflow. package9 will be added
+# to the stack and but not expected keywords will not have any effect.
+    - package9:
+        not_defined_yet_feature: true
+
+# FILTERS ----------------------------------------------------------------------
+# 
+#
+# ------------------------------------------------------------------------------
+    - package10:
+        gpu:
+          nvidia: +cuda +nvml ~rocm
+          none: ~cuda ~rocm ~nvml
+          amd: +rocm ~cuda
+  
+# ILLEGAL CONTRUCTS ------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+#
+# This does not throw an error, but it is invalid spack syntax.
+# Spack will think the package is called package3 +a1~b2.
+#    - package3 +a1~b2:
+#        default:
+#          variants: +include~exclude
+
+
+# ------------------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+serial_packages:
+  metadata: { section: packages }
+  pe: [gcc_stable, intel_stable]
+  packages:
+    - hwloc:
+        default:
+          variants:
+            common: ~cairo ~gl ~libudev ~libxml2 ~netloc +pci
+            gpu:
+              nvidia: +cuda +nvml ~rocm
+              none: ~cuda ~rocm ~nvml
+              amd: +rocm ~cuda
+    - libfabric:
+        default:
+          variants: fabrics=tcp,udp,sockets,mlx,verbs
+    - libxml2:
+        default: { version: 2.9.13 }
+    # This is already specified in the PE section
+    # Here we are just making sure it will go into packages.yaml
+    - python:
+        variants: +tkinter +optimizations ~debug +ssl ~libxml2
+        default:
+          version: <python3>
+          variants: +tkinter +optimizations ~debug +ssl ~libxml2
+    - openssl:
+        default:
+          version: 1.1.1k
+          buildable: false
+        externals:
+          - spec: openssl@1.1.1k
+            prefix: /usr
+    - scotch:
+        variants: ~mpi
+        default: { variants: +esmumps ~metis }
+
+# GCC ONLY ---------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+serial_packages_gcc_stable:
+  metadata: { section: packages }
+  pe: [gcc_stable]
+  packages:
+    - hdf5:
+        default:
+          version: 1.12.2
+          variants: ~mpi +cxx +fortran +hl +ipo +shared +szip +tools
+    - libevent:
+        default:
+          buildable: false
+        externals:
+          - spec: libevent +openssl@2.1.8
+            prefix: /usr
+        module:
+          blacklist: true
+    - ncview:
+        dependencies:
+          - hdf5 ~mpi+szip+hl+fortran+cxx
+          - netcdf-c ~mpi~parallel-netcdf
+    - pmix:
+        default:
+          buildable: False
+        externals:
+          - spec: pmix@4.2.2
+            prefix: /usr
+    - rdma-core:
+        default:
+          buildable: False
+        externals:
+          - spec: rdma-core@40.1
+            prefix: /usr
+    - slurm:
+        default:
+          buildable: false
+        externals:
+          - spec: slurm@<slurm_version> ~mariadb
+            prefix: /usr
+    - ucx:
+        default:
+          variants:
+            common: +rdmacm +rc +dc +ud +cm +cma +verbs +mlx5_dv +parameter_checking +thread_multiple
+
+# BLAS + GPU -------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+serial_packages_blas_gpu:
+  metadata: { section: packages }
+  pe: [gcc_stable, intel_stable]
+  dependencies: [blas, gpu]
+  packages:
+    - suite-sparse:
+        variants:
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+            none: ~cuda
+    - magma:
+        variants:
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+
+# PYTHON ACTIVATED - BLAS  -----------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+serial_packages_python_blas_activated:
+  metadata:
+    section: packages
+    modules: { blacklist: True }
+    activated: True
+  pe: [gcc_stable, intel_stable]
+  dependencies: [python3, blas_parallel]
+  packages:
+    - py-keras-preprocessing
+    - py-matplotlib
+    - py-numpy
+    - py-opt-einsum
+    - py-pandas
+    - py-xarray
+
+serial_packages_python_gcc_stable:
+  metadata:
+    section: packages
+  pe: [gcc_stable]
+  dependencies: [python3]
+  packages:
+    - angsd
+    - llvm@14.0.6:
+        default:
+          version: 14.0.6
+          variants:
+            common: +ipo
+            gpu:
+              nvidia: +cuda cuda_arch=<cuda_arch>
+              none: ~cuda
+    - py-grpcio:
+       activated: True
+
+# PYTHON BLAS ------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+serial_packages_python_blas:
+  metadata: { section: packages }
+  pe: [gcc_stable, intel_stable]
+  dependencies: [python3, blas_parallel]
+  packages:
+    - boost:
+        default:
+          variants: cxxstd=14 +icu ~mpi +python +numpy +atomic +chrono +container +date_time +filesystem +graph +iostreams ~json +locale +log +math ~pic +program_options +random +regex +serialization +shared +signals ~singlethreaded ~stacktrace +system ~taggedlayout +test +thread +timer ~type_erasure ~versionedlayout +wave +exception
+
+serial_packages_python_blas_gcc_stable:
+  metadata: { section: packages }
+  pe: [gcc_stable]
+  dependencies: [python3, blas_parallel]
+  packages:
+    - gmsh:
+        variants: |
+          ~mpi +hdf5 +cgns +eigen ~opencascade +openmp ~fltk ~med
+        dependencies:
+          - scotch ~mpi
+          - cgns ~mpi
+          - hdf5 ~mpi
+          - mmg +ipo ~vtk
+    - py-theano:
+        variants:
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+            none: ~cuda
+
+serial_packages_python_blas_intel_stable:
+  metadata: { section: packages }
+  pe: [intel_stable]
+  dependencies: [python3, blas_parallel]
+  packages:
+    - gmsh:
+        variants: |
+          ~mpi +hdf5 +cgns +eigen ~opencascade +openmp ~fltk ~med
+        dependencies:
+          - scotch ~mpi
+          - cgns ~mpi
+          - hdf5 ~mpi ~ipo
+          - mmg ~ipo ~vtk
+    - py-h5py ^hdf5 ~mpi ~ipo:
+        modules:
+          autoload: direct
+
+
+# PYTHON + GPU (GCC ONLY) ------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+serial_packages_python_gpu_gcc_stable:
+  metadata: { section: packages }
+  pe: [gcc_stable]
+  dependencies: [python3, gpu]
+  packages:
+    - caffe:
+        variants:
+          common: ~opencv +python
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+            none: ~cuda
+        dependencies:
+          - boost~mpi
+
+# EXTERNAL ---------------------------------------------------------------------
+#
+# 
+# ------------------------------------------------------------------------------
+#
+# This packages will be always written to packages.yaml and will always have the
+# flag buildable: false. This type of information should be veiculated in the
+# metadata section of the list and we should avoid repeat it for every package.
+# In a second remark, these packages are already being written to packages.yaml
+# even without expliciting the keyword `default`.
+# IMO, `externals` keywork should be placed inside `default` keyword. In a more
+# general way, it is the default keyword that sets a package to be written to
+# packages.yaml.
+external_packages:
+  metadata:
+    section: packages
+    cloud: False
+  pe: [core]
+  packages:
+    - openjdk:
+        default:
+          buildable: false
+        externals:
+          - spec: openjdk@<jdk_version>
+            prefix: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.332.b09-1.el8_5.x86_64
+        modules:
+          blacklist: True
+    - ansys:
+        default:
+          buildable: false
+        externals:
+          - spec: ansys@2020R2 %<core_compiler>
+            prefix: <external_prefix>/ansys/2020R2/v202
+          - spec: ansys@2022R1 %<core_compiler>
+            prefix: <external_prefix>/ansys/2022R1/v221
+    - comsol:
+        default:
+          buildable: false
+          permissions:
+            read: group
+            group: comsol-soft
+        externals:
+          - spec: comsol@5.6 %<core_compiler>
+            prefix: <external_prefix>/comsol/5.6/comsol56/multiphysics/
+          - spec: comsol@6.0 %<core_compiler>
+            prefix: <external_prefix>/comsol/6.0
+
+
+# MPI + BLAS -------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+mpi_blas_packages_gcc_stable:
+  metadata:
+    section: packages
+  pe:
+    - gcc_stable
+  dependencies:
+    - mpi
+    - blas
+  packages:
+    - gmsh +mpi +eigen +openmp +hdf5 ~fltk ~opencascade ~med:
+        dependencies:
+          - hdf5 +mpi
+          - mmg +ipo ~vtk
+    - mumps:
+        default: { variants: +mpi +parmetis +metis +scotch +ptscotch }
+        dependencies:
+          - scotch +mpi
+          - netlib-scalapack
+    - superlu-dist:
+        default:
+          variants:
+            common: +ipo
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+
+# MPI + BLAS ------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+mpi_blas_packages_intel_stable:
+  metadata: { section: packages }
+  pe: [intel_stable]
+  dependencies: [mpi, blas]
+  packages:
+    - gmsh +mpi +eigen +openmp +hdf5 ~fltk ~opencascade ~med:
+        dependencies:
+          - hdf5 +mpi ~ipo
+          - mmg ~ipo ~vtk
+    - superlu-dist:
+        default:
+          variants:
+            common: ~ipo
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+
+# MPI BLAS PYTHON (GCC ONLY) ---------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+mpi_blas_python_packages_gcc_stable:
+  metadata: { section: packages }
+  pe: [gcc_stable]
+  dependencies: [mpi, blas, python3]
+  packages:
+    - lammps@20220107:
+        variants:
+          common: |
+            build_type=Release +asphere +atc +body +class2 +colloid +compress
+            +coreshell +dipole +diffraction +extra-dump +granular +h5md +kspace
+            +latboltz +latte +lib +manybody +mc +misc +molecule +mpi +mpiio
+            +netcdf +peri ~poems +python +qeq +replica +rigid +shock +ml-snap
+            +srd +voronoi +plumed
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+            none: ~cuda
+        dependencies:
+          - netcdf-c+mpi
+          - fftw+mpi+openmp
+    - py-torch:
+        variants: +mpi
+        default:
+          variants:
+            gpu:
+              nvidia: +cuda cuda_arch=<cuda_arch> +magma
+              none: ~cuda ~cudnn ~nccl
+              rocm: +magma +rocm
+        dependencies:
+          gpu:
+            nvidia: [magma +cuda cuda_arch=<cuda_arch>]
+            rocm: [magma +rocm amdgpuarch=<amd_arch>]
+    - opencv +vtk +python3:
+        variants:
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+            none: ~cuda
+        dependencies:
+          - netcdf-c +mpi
+          - boost+mpi
+    - vtk:
+        default:
+          variants: +ffmpeg +python +xdmf +mpi ~qt +ipo +opengl2
+          gpu:
+            nvidia: ~osmesa
+            none: +osmesa
+        dependencies:
+          - netcdf-c +mpi
+          - boost+mpi
+
+mpi_blas_parallel_python_packages_gcc_stable:
+  metadata: { section: packages }
+  pe: [gcc_stable]
+  dependencies: [mpi, blas_parallel, python3]
+  packages:
+    - paraview +shared +python3 +hdf5:
+        variants:
+          gpu:
+            nvidia: ~osmesa
+            rocm: ~osmesa
+            none: +osmesa
+        dependencies:
+          - netcdf-c+mpi
+    - cp2k@9.1 +mpi ~plumed +openmp smm=blas:
+        variants:
+          gpu:
+            nvidia: +cuda cuda_arch=<cuda_arch>
+            none: ~cuda
+        dependencies:
+          - boost+mpi
+          - fftw+mpi+openmp

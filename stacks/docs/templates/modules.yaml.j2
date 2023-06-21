@@ -1,0 +1,210 @@
+modules:
+  default:
+    roots:
+      lmod: {{ data['lmod_roots'] }}
+      tcl: {{ data['tcl_roots'] }}
+    enable:
+    - lmod
+    - tcl
+    lmod:
+      hash_length: 0
+      core_compilers:
+      - gcc@8.5.0
+      hierarchy:
+      - mpi
+      all:
+        environment:
+          set:
+            ${PACKAGE}_ROOT: ${PREFIX}
+        suffixes:
+{% for variant, suffix in data['suffixes'].items() %}
+          {{ variant }}: {{ suffix }}
+{% endfor %}
+          +mpi: mpi
+          +openmp: openmp
+          threads=openmp: openmp
+          ^fftw+openmp: openmp
+          hdf5=parallel: h5
+          +cuda: cuda
+          +nvptx: cuda
+          +double-gpu: double-gpu
+          file_systems=nfs: nfs
+          device=ch3: ch3
+          device=ch4: ch4
+          ^python@:2.99: py2
+          +plumed: plumed
+          +unwind: unwind
+          +debug: dbg
+          +ilp64: f64
+      whitelist:
+        - cmake +ncurses%{{tokens['core_compiler']}}
+        - llvm%{{tokens['core_compiler']}}
+      blacklist:
+        - autoconf
+        - automake
+        - cmake
+        - libevent
+        - libfabric
+        - libtool
+        - llvm
+        - lmod
+        - m4
+        - openjdk
+        - openssl
+        - perl
+        - pmix
+        - rdma-core
+        - slurm
+        - ucx
+        # === activated python packages
+        - py-backports-entry-points-selectable
+        - py-certifi
+        - py-charset-normalizer
+        - py-cycler
+        - py-cython
+        - py-distlib
+        - py-filelock
+        - py-idna
+        - py-kiwisolver
+        - py-matplotlib
+        - py-mpmath
+        - py-numpy
+        - py-packaging
+        - py-pandas
+        - py-pip
+        - py-pillow
+        - py-ply
+        - py-platformdirs
+        - py-python-dateutil
+        - py-pyparsing
+        - py-pytz
+        - py-requests
+        - py-scipy
+        - py-semver
+        - py-six
+        - py-sympy
+        - py-urllib3
+        - py-virtualenv
+        - py-xarray
+        # # # # # extras for tensorflow
+        - py-absl-py
+        - py-astunparse
+        - py-gast
+        - py-google-pasta
+        - py-grpcio
+        - py-keras-preprocessing
+        - py-opt-einsum
+        - py-protobuf
+        - py-termcolor
+        - py-wheel
+        - py-wrapt
+        # # # # # extras for py-scikit-learn
+        - py-joblib
+        - py-threadpoolctl
+        # ------------------------------
+
+      blacklist_implicits: true
+      gcc:
+        environment:
+          set:
+            CC: ${PREFIX}/bin/gcc
+            CXX: ${PREFIX}/bin/g++
+            F77: ${PREFIX}/bin/gfortran
+            FC: ${PREFIX}/bin/gfortran
+            F90: ${PREFIX}/bin/gfortran
+      openmpi:
+        environment:
+          set:
+            SLURM_MPI_TYPE: pmi2
+            OMPI_MCA_btl_openib_warn_default_gid_prefix: '0'
+      openblas threads=none:
+        environment:
+          set:
+            OPENBLAS_NUM_THREADS: '1'
+      abaqus:
+        template: modules/group_restricted.lua
+      adf:
+        template: modules/group_restricted.lua
+      ams:
+        template: modules/group_restricted.lua
+      comsol:
+        environment:
+          prepend_path:
+            MATLABPATH: ${PREFIX}/mli
+      crystal17:
+        template: modules/group_restricted.lua
+      fdtd:
+        environment:
+          prepend_path:
+            PATH: ${PREFIX}/mpich2/nemesis/bin
+            LD_LIBRARY_PATH: ${PREFIX}/mpich2/nemesis/lib
+          set:
+            SLURM_MPI_TYPE: pmi2
+      gaussian:
+        template: modules/group_restricted.lua
+      hdf5~mpi+cxx:
+        environment:
+          set:
+            HDF5_CC: h5cc
+            HDF5_CXX: h5c++
+            HDF5_FC: h5fc
+      hdf5+mpi~cxx:
+        environment:
+          set:
+            HDF5_CC: h5pcc
+            HDF5_FC: h5pfc
+      intel-oneapi-compilers-classic:
+        environment:
+          set:
+            C_INCLUDE_PATH: ${PERFIX}/compiler/include/icc
+            CPLUS_INCLUDE_PATH: ${PERFIX}/compiler/include/icc
+            INTEL_ROOT: ${PREFIX}
+      intel-oneapi-mpi:
+        environment:
+          set:
+            I_MPI_PMI_LIBRARY: /usr/lib64/libpmi2.so
+            I_MPI_EXTRA_FILESYSTEM: '0'
+            SLURM_MPI_TYPE: pmi2
+      metis:
+        suffixes:
+          ~real64: sp
+      molpro:
+        template: modules/group_restricted.lua
+      plumed:
+        environment:
+          set:
+            PLUMED_KERNEL: ${PREFIX}/lib/libplumedKernel.so
+          unset:
+          - PLUMED_ROOT
+      py-horovod:
+        autoload: direct
+      py-keras:
+        autoload: direct
+      py-tensorflow:
+        autoload: direct
+      py-theano:
+        autoload: direct
+      py-torch:
+        autoload: direct
+      py-torchvision:
+        autoload: direct
+      quantum-espresso:
+        suffixes:
+          hdf5=parallel: hdf5
+      scala:
+        autoload: direct
+      scons:
+        suffixes:
+          '^python@:2.99': py2
+          '^python@3:': py3
+      spark:
+        autoload: direct
+        environment:
+          prepend_path:
+            PATH: /ssoft/spack/scripts/all/spark
+      ucx:
+        environment:
+          unset:
+            - UCX_ROOT
+      vasp:
+        template: modules/group_restricted.lua
