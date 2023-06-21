@@ -8,6 +8,7 @@ import llnl.util.tty as tty
 # this prefix to fetch the modules.
 import spack.extensions.xdp.cmd.xdp_cmd.write as xdp_write
 import spack.extensions.xdp.cmd.xdp_cmd.clone as xdp_clone
+import spack.extensions.xdp.cmd.xdp_cmd.info as xdp_info
 
 from pdb import set_trace as st
 description = "commands specific to spack-xdp"
@@ -19,7 +20,7 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="xdp commands", dest="xdp_command")
     xdp_clone.add_command(sp)
     xdp_write.add_command(sp)
-
+    xdp_info.add_command(sp)
 
 def xdp(parser, args):
 
