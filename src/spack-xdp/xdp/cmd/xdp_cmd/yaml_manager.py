@@ -38,20 +38,21 @@ class ReadYaml(object):
     def __init__(self):
         """Set configuration directory"""
 
-        self.root = None
-        self.data = None
-        self.cursor = []
+        #self.root = None
+        #self.data = None
+        #self.cursor = []
 
         ### NEW FORMAT
         self.data = None
-        self.config = None
-        self.platform = None
+        #self.config = None
+        #self.platform = None
 
     def read(self, filename, **kwargs):
         """Read yaml file into data object"""
 
-        with open(filename) as f:
-            self.data = spyaml.load_config(f, **kwargs)
+        if self.data is None:
+            with open(filename) as f:
+                self.data = spyaml.load_config(f, **kwargs)
         return self.data
 
     def get_data(self, filename):
