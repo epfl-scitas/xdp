@@ -34,6 +34,15 @@ class Config(object):
             2 xdp.yaml
             3 class contructor (lowest priority)"""
 
+    _instance = None
+
+    def __new__(cls, *args, **kw):
+        """Class constructor"""
+
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, args):
         """Fills configuration options"""
 
