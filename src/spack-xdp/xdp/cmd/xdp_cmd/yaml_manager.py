@@ -38,11 +38,6 @@ class ReadYaml(object):
     def __init__(self):
         """Set configuration directory"""
 
-        #self.root = None
-        #self.data = None
-        #self.cursor = []
-
-        ### NEW FORMAT
         self.data = None
         #self.config = None
         #self.platform = None
@@ -50,10 +45,16 @@ class ReadYaml(object):
     def read(self, filename, **kwargs):
         """Read yaml file into data object"""
 
-        if self.data is None:
-            with open(filename) as f:
-                self.data = spyaml.load_config(f, **kwargs)
+        with open(filename) as f:
+            self.data = spyaml.load_config(f, **kwargs)
         return self.data
+
+    def read2(self, filename, **kwargs):
+        """Read yaml file into data object"""
+
+        with open(filename) as f:
+            data = spyaml.load_config(f, **kwargs)
+        return data
 
     def get_data(self, filename):
         """Returns the data read"""
@@ -76,6 +77,7 @@ class ReadYaml(object):
         """Reads tokens from platform file and executes replacement.
         `data` is a dictionary where the replacements will happen.
         Replacements are done in place."""
+
         self.tokens = self._read_tokens(self.platform_file)
         for key, value in self.tokens.items():
             self._do_replace_tokens(data, '<' + str(key) + '>', str(value))
@@ -104,7 +106,7 @@ class ReadYaml(object):
 
         common = ReadYaml()
         common.read(platform_file)
-            
+
         return(common.data['platform']['tokens'])
 
     def _do_replace_tokens(self, d, pat, rep):
@@ -113,8 +115,8 @@ class ReadYaml(object):
         >>> IN PLACE REPLACEMENT <<<
 
         d - yaml file in form of python dicy.
-        pat - pattern to look for, par exemple: '<<id>>'.
-        rep - replacement string, par exemple: 'xy: z')."""
+        pat - pattern to look for, ex: '<id>'.
+        rep - replacement string, ex: 'xy: z')."""
 
         if isinstance(d, dict):
             for k in d:
@@ -163,13 +165,16 @@ class ReadYaml(object):
         related to packages or to PE. This function will group all section
         which has section value in section key"""
 
+        # TODO this method could accept section as a list and therefor
+        #      group more than one section type.
+
         tmp = {}
-        for key, value in dict_.items():
-            if 'metadata' not in value:
-                tty.debug(f'Error in dict entry {key}: {value}')
-            if value['metadata']['section'] == section:
-                tmp[key] = copy.copy(value)
-                tmp[key].pop('metadata')
+        for k, v in dict_.items():
+            if 'metadata' not in v:
+                tty.debug(f'group_sections: metadata key not found')
+            if v['metadata']['section'] == section:
+                tmp[k] = copy.copy(v)
+                tmp[k].pop('metadata')
         return tmp
 
     def do_choose(self, stack, dic, token):

@@ -86,6 +86,7 @@ class Config(object):
 
         conf = ReadYaml()
         conf.read('xdp.yaml')
+        c = conf.data['config']
 
         # prefix:
         if args.prefix:
@@ -108,12 +109,35 @@ class Config(object):
             if conf.data['config']['platform']:
                 self.platform = conf.data['config']['platform']
 
+        # output_path:
+        if os.environ.get('SPACK_SYSTEM_CONFIG_PATH') is not None:
+            self.output_path = os.environ.get('SPACK_SYSTEM_CONFIG_PATH')
+        elif c['output_path'] is not None:
+            self.output_path = c['output_path']
+        else:
+            self.output_path = os.getcwd()
+
         # Full path to yaml files can only be known
         # after settled on prefix, stack and platform.
         stack_path = os.path.join(self.prefix, self.stack)
         self.stack_yaml = os.path.join(stack_path, self.stack + '.yaml')
-        self.platform_yaml = os.path.join(stack_path, self.platforms_dir, self.platform)
+        self.platform_yaml = os.path.join(stack_path, self.platforms_dir, self.platform + '.yaml')
+        # Hardcoded common.yaml bypassing xdp.yaml
         self.commons_yaml = os.path.join(stack_path, 'common.yaml')
+
+        # See that in the code below we are using the 'templates_dir' value
+        # from the xdp.yaml and we are ignoring that this variable could be
+        # empty. For a more complete approach we should first choose the
+        # 'templates_dir' value between the one given in xdp.yaml and the
+        # default defined in the initializer of this class.
+
+        # templates_path:
+        # TODO: fix this logic
+        if 'templates_path' in c:
+            if c['templates_path']:
+                self.templates_path = c['templates_path']
+            else:
+                self.templates_path = os.path.join(stack_path, c['templates_dir'])
 
 
     def info(self, verbose=False):
@@ -125,6 +149,7 @@ class Config(object):
         print(f'stack: {self.stack}')
         print(f'platform: {self.platform}')
         print(f'prefix: {self.prefix}')
+        print(f'output_path: {self.output_path}')
 
         if verbose:
 
