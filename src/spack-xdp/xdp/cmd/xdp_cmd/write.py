@@ -5,7 +5,10 @@ section = "SCITAS"
 level = "short"
 
 from pdb import set_trace as st
+import llnl.util.tty as tty
+
 import spack.extensions.xdp.cmd.xdp_cmd.xdp_config as xdp_config
+import spack.extensions.xdp.cmd.xdp_cmd.spack_yaml as spack_yaml
 
 def add_command(subparser):
 
@@ -34,8 +37,38 @@ def add_command(subparser):
 def manifest(parser, args):
     print(f'this is manifest command')
 
+    # 1.set up running parameters
+    # 2.create data structures
+    # 3.output results
     config = xdp_config.Config(args)
+
+    # Process Programming Environment section.
+    stack = spack_yaml.SpackYaml(config)
+
+    # Create PE definitions dictionary
     st()
+    stack.create_pe_defs()
+
+    # Create packages definitions dictionary
+    st()
+    stack.create_pkgs_defs()
+
+    # Create PE matrix dictionary
+    st()
+    stack.create_pe_specs()
+
+    # Create package lists matrix dictionary
+    st()
+    stack.create_pkgs_specs()
+
+    # Concatenate all dicts
+    data = {}
+    data['pe_defs'] = stack.pe_defs
+    data['pkgs_defs'] = stack.pkgs_defs
+    data['pe_specs'] = stack.pe_specs
+    data['pkgs_specs'] = stack.pkgs_specs
+
+    stack.write_yaml(data = data)
 
 
 
