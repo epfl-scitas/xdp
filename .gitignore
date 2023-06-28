@@ -5,8 +5,8 @@ spack-manager
 spack-v0.20.0
 dev
 dev_setup.sh
-/work/proj/xdp/src/spack-xdp/xdp/cmd/xdp_cmd/2del
-/work/proj/xdp/src/spack-xdp/xdp/cmd/xdp_cmd/old
+src/spack-xdp/xdp/cmd/xdp_cmd/2del
+src/spack-xdp/xdp/cmd/xdp_cmd/old
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
