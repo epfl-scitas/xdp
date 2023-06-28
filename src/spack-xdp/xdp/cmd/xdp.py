@@ -17,7 +17,7 @@ level = "short"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar="xdp commands", dest="xdp_command")
+    sp = subparser.add_subparsers(metavar="", dest="xdp_command")
     xdp_clone.add_command(sp)
     xdp_write.add_command(sp)
     xdp_info.add_command(sp)
