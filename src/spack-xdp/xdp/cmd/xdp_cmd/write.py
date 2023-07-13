@@ -8,7 +8,9 @@ from pdb import set_trace as st
 import llnl.util.tty as tty
 
 import spack.extensions.xdp.cmd.xdp_cmd.xdp_config as xdp_config
-import spack.extensions.xdp.cmd.xdp_cmd.spack_yaml as spack_yaml
+# import spack.extensions.xdp.cmd.xdp_cmd.spack_yaml as spack_yaml
+
+import spack.extensions.xdp.cmd.xdp_cmd.manifest as manifst
 
 def add_command(subparser):
 
@@ -20,6 +22,9 @@ def add_command(subparser):
 
     # Add subparser for the different objects to write
     sp = write_parser.add_subparsers(metavar="", dest="xdp_sub_command")
+
+    # Temporary
+    yeah_parser = sp.add_parser('yeah', help = 'write spack manifest')
 
     # Manifest
     manifest_parser = sp.add_parser('manifest', help = 'write spack manifest')
@@ -34,6 +39,35 @@ def add_command(subparser):
     modules_parser.add_argument('-mod')
 
 
+# command to be renamed to manifest
+# new manifest command using the new PE class
+def yeah(parser, args):
+    print(f'yeah this is command')
+
+    # if no arguments are passed to spack
+    # xdp then it should print usage
+
+    print(f'Entering config')
+    config = xdp_config.Config(args)
+    print(f'Config done')
+
+    # Process Programming Environment section.
+    print(f'Initialize Stack object')
+    stack = manifst.Manifest(config)
+    print(f'Stack object initialized')
+
+    # Concatenate all dicts
+    data = {}
+    data['pe_defs'] = stack.pe_defs()
+
+    # stack.pkgs_defs()
+    st()
+
+    #data['pkgs_defs'] = stack.pkgs_defs
+    #data['pe_specs'] = stack.pe_specs
+    #data['pkgs_specs'] = stack.pkgs_specs
+
+
 def manifest(parser, args):
     print(f'this is manifest command')
 
@@ -43,23 +77,10 @@ def manifest(parser, args):
     config = xdp_config.Config(args)
 
     # Process Programming Environment section.
-    stack = spack_yaml.SpackYaml(config)
+    # stack = spack_yaml.SpackYaml(config)
 
-    # Create PE definitions dictionary
     st()
-    stack.create_pe_defs()
-
-    # Create packages definitions dictionary
-    st()
-    stack.create_pkgs_defs()
-
-    # Create PE matrix dictionary
-    st()
-    stack.create_pe_specs()
-
-    # Create package lists matrix dictionary
-    st()
-    stack.create_pkgs_specs()
+    print('done')
 
     # Concatenate all dicts
     data = {}
@@ -69,8 +90,6 @@ def manifest(parser, args):
     data['pkgs_specs'] = stack.pkgs_specs
 
     stack.write_yaml(data = data)
-
-
 
 
 def packages(parser, args):
