@@ -1,67 +1,32 @@
-# ------------------------------------------------------------------------------
-# EXAMPLES ON HOW TO WRITE PACKAGE SPECS:
-# 
-#
-#  - pkg1
-#  - pkg2@2.2
-#  - pkg3:
-#      variants: +spec1
-#  - pkg4@1.1:
-#      variants: +spec1
-#  - pkg5:
-#      variants:
-#        common: +spec1
-#  - pkg6@1.2.3:
-#      variants:
-#        common: +spec1
-#      dependencies:
-#        - dep1
-#        - dep2
-#  - pkg7@1.2.3:
-#      dependencies:
-#      - dep1
-#      - dep2
-#  - pkg8@1.2.3:
-#      gpu:
-#        nvidia: ~osmesa
-#        none: +osmesa
-#
-# ------------------------------------------------------------------------------
-# PROGRAMMING ENVIRONMENT SECTION (PE)
-#
-# The PE section follows the syntax: <pe_name>_<stack_name>_<package_name>. for
-# example: intel_stable_compiler. There is a parent child schema that must be
-# respected. The metadata key is ignored for this purpose. The core PE only has
-# one information and does not follow the same schema. Any key under the
-# <package_name> will be seen as a filter or it will be ignored. In the future
-# we may need to introduce a stack key and a dependencies key for the case where
-# we want to compile the compiler or stack libraries with GPU support. For now,
-# the core_compiler should have this name (this means 'core' key and 'compiler'
-# for subkey. We can also set section:core for the core PE.
 core:
   metadata:
     section: core
   compiler: <core_compiler>
 
-# Definitions will show up in spack.yaml as a concatenation
-# of all keys till the value. So for example, the definition for the
-# mpi spec using ethernet is gcc_stable_mpi_ethernet.
 gcc:
   metadata:
     section: pe
   stable:
     compiler: gcc@11.3.0
     mpi:
-      infiniband: openmpi@4.1.3 fabrics=ucx +pmi schedulers=slurm ~memchecker ~rsh ^hwloc ~libxml2
-      ethernet: openmpi@4.1.3 fabrics=ucx +pmi schedulers=slurm ~memchecker ~rsh ^hwloc ~libxml2
+      infiniband: openmpi@4.1.3 on infiniband
+      ethernet: openmpi@4.1.3 on ethernet
     blas: openblas@0.3.20 threads=none +locking
     blas_parallel: openblas@0.3.20 threads=openmp +locking
     python3: python@<python3> +tkinter +optimizations ~debug +ssl ~libxml2
     python2: python@2.7.18 +tkinter ~debug
     gpu:
+      carlos: wtf@4am
       nvidia: cuda@11.7.0
-      none: "" # This will also be present in spack.yaml.
-               #This also shoes that comments like this are possible.
+      none: "" # This creates en empty list in spack.yaml > `gcc_stable_gpu: [ ]`
+               # But it should create nothing !?
+               # Because then it will also create matrix entries:
+               #
+               # - matrix:
+               #   - [ $gcc_stable_gpu ]
+               #   - [ $%gcc_stable_compiler ]
+               #
+               # This also shows that comments like this are possible.
 
 intel:
   metadata:
@@ -75,6 +40,7 @@ intel:
     python3: python@<python3> +tkinter +optimizations ~debug +ssl
     python2: python@2.7.18 +tkinter ~debug
     gpu:
+      carlos: wtf@4am intel
       nvidia: cuda@11.7.0
       none: ""
 
@@ -176,7 +142,26 @@ core_packages:
           nvidia: +cuda +nvml ~rocm
           none: ~cuda ~rocm ~nvml
           amd: +rocm ~cuda
-  
+
+    - package11:
+        gpu:
+          nvidia: uma cena à maneira
+          none: ~cuda ~rocm ~nvml
+          amd: +rocm ~cuda
+          carlos: +4@sly
+
+    - package12:
+        version: 1.2.3
+        variants: +var1~var2
+        dependencies:
+        - dep1+var3~var4
+        - dep2~var5+var6
+        gpu:
+          nvidia: uma cena à maneira
+          none: ~cuda ~rocm ~nvml
+          amd: +rocm ~cuda
+          carlos: +4@sly
+
 # ILLEGAL CONTRUCTS ------------------------------------------------------------
 #
 #
