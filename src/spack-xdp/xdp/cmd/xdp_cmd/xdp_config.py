@@ -70,7 +70,7 @@ class Config(object):
         self.upstreams_yaml_template = 'upstreams.yaml.j2'
         self.concretizer_yaml_template = 'concretizer.yaml.j2'
         self.config_yaml_template = 'config.yaml.j2'
-        # Spack configuration files
+        # Spack configuration files (output)
         self.spack_yaml = 'spack.yaml'
         self.spack_yaml_path = None
         self.packages_yaml = 'packages.yaml'
@@ -139,6 +139,11 @@ class Config(object):
             else:
                 self.templates_path = os.path.join(stack_path, c['templates_dir'])
 
+    def __getattr__(self):
+        print('This is __getatr__')
+
+    #def __getattribute__(self):
+    #    print('This is __getattribute__')
 
     def info(self, verbose=False):
         """Print xdp configuration after having
