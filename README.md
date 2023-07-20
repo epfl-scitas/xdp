@@ -8,9 +8,9 @@ The goal of xdp is to install a software stack (defined in the stack file) on a 
 platform (defined in the platform file). This is acheived by designing a stack file
 general enough to support different architectures between hardware platforms.
 
-This is acheived through the use of filters and tokens which are two methods used
-by xdp to read data from the platform file and write the `spack.yaml` file that spack
-is waiting for to install the stack.
+This generality is acheived through the use of `filters` and `tokens` which are two
+concepts used by xdp to read data from the platform file and write the manifest
+that spack is waiting for to install the stack.
 
 Using the filtering mechanism xdp can read the fabrics interconnect declared in the
 platform file and `chose` the corresponding set of variants in the stack file when
@@ -18,6 +18,10 @@ installing the MPI library.
 
 Using the tokens mechanism xdp can read in the platform file for the compiler provided
 by the platform OS and then `replace` it in the stack file where needed.
+
+Using this technique xdp can install the same software stack in platforms having
+different specifications and arhitectures provided their differences have previously
+been identified in the platform file. Each system should provide it's own platform file.
 
 ## the stack file
 This is the main file where the packages to be installed are listed. Everything is done
@@ -231,6 +235,82 @@ then place the `<core_compiler>` token under the `core` key in the stack file
 when defining this PE. In simple terms, tokens allows the user to define
 platform specifics in the platflorm file and have this information available in
 the stack file.
+
+## canonical forms
+### programming environment
+### package list
+### package definition
+
+```yaml
+- package:
+    variants:
+      common: spec
+      filter_1:
+        choice_1: spec_1
+        choice_2: spec_2
+    dependencies:
+      common:
+        - spec1
+        - spec2
+      filter_1:
+        choice_1: spec_1
+        choice_2: spec_2
+    default:
+      version: [version]
+      variants:
+        common: spec
+        filter_1:
+          choice_1: spec_1
+          choice_2: spec_2
+      dependencies:
+        common:
+        - spec1
+        - spec2
+        filter_1:
+          choice_1: spec_1
+          choice_2: spec_2
+```
+The following section will explain the expected behaviour when using each one of the
+previous attributes.
+
+#### dependencies
+These are the specs on which the package depends on. This attribute can be a list
+of specs or a dictionary containing the common key and optionaly a filter. In this
+case, the list of specs is declared in the common key.
+The resulting behaviour is that the specs declared as dependencies will be appended
+at the end of the spec using the caret sign.
+```yaml
+- cp2k:
+    dependencies:
+      - boost+mpi
+      - fftw+mpi+openmp
+- slepc:
+    dependencies:
+      common:
+        - hdf5~ipo+mpi
+      gpu:
+        nvidia:
+          - petsc+cuda
+          - suite-sparse+cuda
+        none: []
+- py-torchvision:
+    dependencies:
+      gpu:
+        nvidia:
+          - py-torch+mpi+cuda
+          - magma+cuda
+        none:
+          - py-torch+mpi~cuda
+```
+Given the previous specs, we can be sure to found the folliwing lines in the
+spack.yaml file for a platform where the nvidia accelerator would have been
+defined:
+```yaml
+- cp2k ^boost+mpi ^fftw+mpi+openmp
+- slepc ^hdf5~ipo+mpi ^petsc+cuda ^suite-sparse+cuda
+- py-torchvision ^py-torch+mpi+cuda ^magma+cuda
+```
+The dependencies method from the Package class will return a string or None.
 ## glossary
 + manifest - spack.yaml file
 + programming environment

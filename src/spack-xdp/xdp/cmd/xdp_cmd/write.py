@@ -8,9 +8,9 @@ from pdb import set_trace as st
 import llnl.util.tty as tty
 
 import spack.extensions.xdp.cmd.xdp_cmd.xdp_config as xdp_config
-# import spack.extensions.xdp.cmd.xdp_cmd.spack_yaml as spack_yaml
 
 import spack.extensions.xdp.cmd.xdp_cmd.manifest as manifst
+from spack.extensions.xdp.cmd.xdp_cmd.stack import Stack, PE, PackageList, Package
 
 def add_command(subparser):
 
@@ -52,16 +52,54 @@ def yeah(parser, args):
     print(f'Config done')
 
     # Process Programming Environment section.
-    print(f'Initialize Stack object')
-    stack = manifst.Manifest(config)
-    print(f'Stack object initialized')
+    #print(f'Initialize Stack object')
+    #stck = manifst.Manifest(config)
+    #print(f'Stack object initialized')
 
     # Concatenate all dicts
-    data = {}
-    data['pe_defs'] = stack.pe_defs()
+    #data = {}
+    #data['pe_defs'] = stck.pe_defs() # Only this method requires data from the PE
+                                      # This makes us think that we could have two
+                                      # different classes both inhereting from the
+                                      # Stack for the single purpose of having each
+                                      # one its own __str__ method (but possibly
+                                      # other will came up later)
 
-    # stack.pkgs_defs()
+
+    stack = Stack(config)
+
+    p = {"petsc": {"variants": {"common": "~int64 +double +hdf5 +metis +mpi +superlu-dist "
+                                          "+hypre +suite-sparse",
+                                "gpu": {"nvidia": "+cuda cuda_arch=<cuda_arch>",
+                                        "none": "~cuda"}
+                                },
+                   "dependencies": {"common": ["hdf5 ~ipo +mpi +szip +hl +fortran +cxx",
+                                               "spec2"],
+                                    "gpu": {"nvidia": "+cuda cuda_arch=<cuda_arch>",
+                                            "none": "~cuda"}
+                                    }
+                   }
+         }
+
+    petsc = {"variants": {"common": "~int64 +double +hdf5 +metis +mpi +superlu-dist "
+                                    "+hypre +suite-sparse",
+                          "gpu": {"nvidia": "+cuda cuda_arch=<cuda_arch>",
+                                  "none": "~cuda"}
+                          },
+             "dependencies": {"common": "- hdf5 ~ipo +mpi +szip +hl +fortran +cxx",
+                              "gpu": {"nvidia": "+cuda cuda_arch=<cuda_arch>",
+                                      "none": "~cuda"}
+                              }
+             }
+
+    package = Package(p)
     st()
+
+
+    pkg_list = PackageList(stack.pkgs())
+
+    pkgs.definitions()
+
 
     #data['pkgs_defs'] = stack.pkgs_defs
     #data['pe_specs'] = stack.pe_specs
