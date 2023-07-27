@@ -56,6 +56,25 @@ class Package(dict):
                 tmp = v['common']
         return tmp
 
+#    @property
+#    def variants2(self):
+#        """Return package variants"""
+#
+#        # ALMOST same code as dependencies (variants is a string, not a list).
+#        # `variants` can be a `string` or a `dictionary` containing the key
+#        # `common`.
+#
+#        tmp = ''
+#        if 'variants' in self[self.name]:
+#            v = self[self.name]['variants']
+#            if isinstance(v, str):
+#                tmp = v
+#            elif 'common' in v:
+#                tmp = v['common']
+#                if has_filters():
+#
+#        return tmp
+
     @property
     def version(self):
         """Return package version"""
@@ -86,6 +105,11 @@ class Package(dict):
         """Returns the default spec"""
         pass
 
+    @property
+    def externals(self) -> str:
+        """"""
+        pass
+
 
 if __name__ == "__main__":
 
@@ -103,6 +127,18 @@ if __name__ == "__main__":
                       }
             }
 
+    # random data
+    pkg1 = {"metallo": {"variants": {"common": "~int64 +double +hdf5 +metis +mpi +superlu-dist "
+                                               "+hypre +suite-sparse",
+                                     "filter": {"nvidia": "+cuda cuda_arch=<cuda_arch>"}
+                                     },
+                      "dependencies": {"common": ["hdf5 ~ipo +mpi +szip +hl +fortran +cxx",
+                                                  "spec2"],
+                                       "gpu": {"nvidia": "+cuda cuda_arch=<cuda_arch>",
+                                               "none": "~cuda"}
+                                       }
+                      }
+            }
 
     pkg = Package(pkg1)
 
@@ -144,4 +180,4 @@ if __name__ == "__main__":
 
 
 
-
+    st()
