@@ -4,9 +4,9 @@ eXtended Deploy - define and deploy a software stack over different architecture
 
 ## general overview
 
-The goal of xdp is to install a software stack (defined in the stack file) on a given
-platform (defined in the platform file). This is acheived by designing a stack file
-general enough to support different architectures between hardware platforms.
+The goal of xdp is to install a software stack (defined by the stack file) on a given
+platform (defined by the platform file). The design enables xdp to install the same
+software stack over different hardware architectures.
 
 This generality is acheived through the use of `filters` and `tokens` which are two
 concepts used by xdp to read data from the platform file and write the manifest
