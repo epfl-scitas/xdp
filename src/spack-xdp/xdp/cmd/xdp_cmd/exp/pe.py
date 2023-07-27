@@ -167,6 +167,67 @@ class PE:
         #       ...
         #   }
 
+class PE:
+    """Return PE object
+
+    REMARKS:
+    > Only one compiler is allowed per PE
+    """
+    def __init__(self, data):
+        self.data = data
+
+    def __str__(self):
+        return f'{self.data}'
+
+    def __repr__(self):
+        return f'{self.data}'
+
+    @property
+    def name(self) -> str:
+        """Returns first key found in Yaml"""
+        return list(self.data.keys())[0]
+
+    @property
+    def releases(self) -> list:
+        """Return available releases"""
+        return list(self.data[self.name].keys())
+
+    @property
+    def stable(self) -> dict:
+        """Return stable dict"""
+        return self._release('stable')
+
+    @property
+    def future(self) -> dict:
+        """Return future dict"""
+        return self._release('future')
+
+    @property
+    def deprecated(self) -> dict:
+        """Return deprecated dict"""
+        return self._release('deprecated')
+
+    def _release(self, release):
+        try:
+            return Release(self.data[self.name][release])
+        except:
+            print(f'{self.name} has no {release} release')
+            return None
+
+    def definitions(self):
+        """Returns PE definitions"""
+
+        # expected output:
+        #
+        #   {
+        #       'gcc_stable_compiler': 'gcc@11.3.0',
+        #       'gcc_stable_mpi': 'openmpi@4.1.3 on infiniband',
+        #       'gcc_stable_blas': 'openblas@0.3.20 threads=none +locking'
+        #       ...
+        #   }
+
+        pass
+
 if __name__ == "__main__":
 
     # The goal of this script is to create the method to add to the Stack class
@@ -207,7 +268,7 @@ if __name__ == "__main__":
     print(f'gcc.stable.gpu: {gcc.stable.gpu}')
 
     gcc.definitions
-    
+
     # st()
 
 

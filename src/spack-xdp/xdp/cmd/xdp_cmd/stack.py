@@ -723,6 +723,12 @@ class PE:
         return f'{self.data}'
 
     @property
+    def list(self) -> dict:
+        """Return `pe` object"""
+
+        return PE(self.get_pe())
+
+    @property
     def name(self) -> str:
         """Returns first key found in Yaml"""
         return list(self.data.keys())[0]
