@@ -38,36 +38,6 @@ def add_command(subparser):
     modules_parser = sp.add_parser('modules', help = 'write modules yaml configuration')
     modules_parser.add_argument('-mod')
 
-
-# command to be renamed to manifest
-# new manifest command using the new PE class
-def yeah(parser, args):
-    print(f'yeah this is command')
-
-    # if no arguments are passed to spack
-    # xdp then it should print usage
-
-    print(f'Entering config')
-    config = xdp_config.Config(args)
-    print(f'Config done')
-
-    # Process Programming Environment section.
-    #print(f'Initialize Stack object')
-    #stck = manifst.Manifest(config)
-    #print(f'Stack object initialized')
-
-    # Concatenate all dicts
-    #data = {}
-    #data['pe_defs'] = stck.pe_defs() # Only this method requires data from the PE
-                                      # This makes us think that we could have two
-                                      # different classes both inhereting from the
-                                      # Stack for the single purpose of having each
-                                      # one its own __str__ method (but possibly
-                                      # other will came up later)
-
-
-    stack = Stack(config)
-
     p = {"petsc": {"variants": {"common": "~int64 +double +hdf5 +metis +mpi +superlu-dist "
                                           "+hypre +suite-sparse",
                                 "gpu": {"nvidia": "+cuda cuda_arch=<cuda_arch>",
@@ -92,19 +62,73 @@ def yeah(parser, args):
                               }
              }
 
-    package = Package(p)
+# command to be renamed to manifest
+# new manifest command using the new PE class
+def yeah(parser, args):
+    print(f'yeah this is command')
+
+    # if no arguments are passed to spack
+    # xdp then it should print usage
+
+    print(f'entering config')
+    config = xdp_config.Config(args)
+    print(f'config done')
+
+    print(f'entering stack')
+    stack = Stack(config)
+    print(f'stack done')
+
     st()
+    data = {}
+    data['pe_defs'] = stack.pe.definitions
+    data['pkgs_defs'] = stack.pkgs.definitions
+    data['pe_specs'] = stack.pe.specs
+    data['pkgs_specs'] = stack.pkgs.specs
+
+#    # Concatenate all dicts
+#    data = {}
+#    data['pe_defs'] = pe.definitions
+#    data['pkgs_defs'] = pkgs.definitions
+#    data['pe_specs'] = pe.specs
+#    data['pkgs_specs'] = pkgs.specs
+#
+#    stack.write_yaml(data = data)
 
 
-    pkg_list = PackageList(stack.pkgs())
+    # This is not object of the PE class
+    def definitions(self) -> dict:
+        """Returns PE definitions"""
 
-    pkgs.definitions()
+        # expected output:
+        #
+        #   {
+        #       'gcc_stable_compiler': 'gcc@11.3.0',
+        #       'gcc_stable_mpi': 'openmpi@4.1.3 on infiniband',
+        #       'gcc_stable_blas': 'openblas@0.3.20 threads=none +locking'
+        #       ...
+        #   }
 
 
-    #data['pkgs_defs'] = stack.pkgs_defs
-    #data['pe_specs'] = stack.pe_specs
-    #data['pkgs_specs'] = stack.pkgs_specs
+        # pe class must answer the following queries:
+        # > stable, future, etc
+        # > compilers
+        # > notable libraries
+        # > other libraries
 
+        return self._flatten_dict(self.apply_filters())
+
+    def specs(self) -> dict:
+        """Returns PE specs"""
+
+        # expected output:
+        #
+        #   {
+        #       'gcc_stable': ['mpi', 'gpu', ...],
+        #       'intel_stable': ['mpi', 'blas', ...]
+        #       ...
+        #   }
+
+        return self._flatten_dict(self.apply_filters())
 
 def manifest(parser, args):
     print(f'this is manifest command')

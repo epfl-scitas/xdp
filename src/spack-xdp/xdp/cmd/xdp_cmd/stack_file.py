@@ -1,3 +1,4 @@
+from collections.abc import MutableMapping
 import copy
 import inspect
 import json
@@ -47,6 +48,7 @@ class Stack:
     def __call__(self):
         return self.stack
 
+
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
     #
@@ -61,9 +63,18 @@ class Stack:
         with open(filename) as f:
             return spyaml.load_config(f, **kwargs)
 
+    # TO DELETE
     def get_pe(self) -> dict:
         """Return `pe` key from stack dictionary"""
         return self.group_sections(copy.deepcopy(self.stack), 'pe')
+
+    def pe(self) -> dict:
+        """Return `pe` key from stack dictionary"""
+        return self.get_section('pe')
+
+    def pkgs(self) -> dict:
+        """Return `packages` key from stack dictionary"""
+        return self.get_section('packages')
 
     def get_section(self, section: str) -> dict:
         """Return `section` key from stack dictionary"""
@@ -76,6 +87,8 @@ class Stack:
     def filters(self) -> dict:
         """Return filter keys from platform dictionary"""
         return self.platform['platform']['filters']
+
+    # def apply_filters(self) -> None:
 
     def replace_tokens(self) -> None:
         """Read tokens from platform file and call replacement procedure.
@@ -113,6 +126,14 @@ class Stack:
                     d[idx] = elem.replace(pat, rep)
                 else:
                     self._do_replace_tokens(d[idx], pat, rep)
+
+    def spec(self, pkg: dict) -> str:
+        """Return spec from dict.
+
+        This method accepts a package declaration passed as a dictionary
+        and returns the implicit spec."""
+
+        pass
 
     def group_sections(self, dic: dict, section: str) -> dict:
         """Returns dictionary composed of common sections.
@@ -379,7 +400,7 @@ class Stack:
             result.append(str(attributes))
         return result
 
-    def _handle_package_dictionary(self, pkg):
+    def _handle_package_dictionary(self, pkg: dict):
         """Returns one line spec based on package attributes
 
         This method is responsible for processing the attributes
@@ -474,6 +495,43 @@ class Stack:
         return(self._remove_newline(' ^' + ' ^'.join(dependencies)))
 
 
+# This does no work like this because it will ask for the config parameter
+# which __init__ from Stack class is expecting.
+class PackageList(Stack):
+    def __str__(self):
+        return json.dumps(self.pkgs(), sort_keys=True, indent=4)
+
+class PE(Stack):
+
+    def definitions(self):
+        return self._flatten_dict(self.apply_filters())
+
+    def __str__(self):
+        print('method __str__ from PE class')
+        return json.dumps(self.pe(), sort_keys=True, indent=4)
+
+    def _flatten_dict(self, d: MutableMapping, parent_key: str = '', sep: str = '_'):
+        """Returns a flat dict
+
+        Return a 1-depth dict (flat) whose elements are formed by composing
+        the nested dicts nodes using the separator sep.
+        {'a':1, 'b':{'c':2}} -> {'a':1, 'b_c':2}
+        origin: freecodecamp"""
+
+        tty.debug(f'Entering function: {inspect.stack()[0][3]}')
+
+        return dict(self._flatten_dict_gen(d, parent_key, sep))
+
+    def _flatten_dict_gen(self, d, parent_key, sep):
+
+        tty.debug(f'Entering function: {inspect.stack()[0][3]}')
+
+        for k, v in d.items():
+            new_key = parent_key + sep + str(k) if parent_key else k
+            if isinstance(v, MutableMapping):
+                yield from self._flatten_dict(v, new_key, sep=sep).items()
+            else:
+                yield new_key, v
 
 #    def _read_tokens(self, platform_file: str):
 #        """Return dict of keys to be replaced in stack file
