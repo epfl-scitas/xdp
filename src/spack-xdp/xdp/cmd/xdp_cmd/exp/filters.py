@@ -1,4 +1,4 @@
-# 1 filter for variants
+# 1 odity for variants
 pkg1 = {"bizarro": {"variants": {"common": "+sci +experiments",
                                  "gpu": {"nvidia": "+cuda",
                                          "none": "~cuda"}
@@ -10,8 +10,7 @@ pkg1 = {"bizarro": {"variants": {"common": "+sci +experiments",
                   }
         }
 
-
-# 0 filters fro variants
+# 0 odities fro variants
 pkg2 = {"metallo": {"variants": {"common": "~int64 +double +hdf5 +metis +mpi +superlu-dist "
                                            "+hypre +suite-sparse",
                                  },
@@ -23,7 +22,7 @@ pkg2 = {"metallo": {"variants": {"common": "~int64 +double +hdf5 +metis +mpi +su
                   }
         }
 
-# 2 filters for variants
+# 2 odities for variants
 pkg3 = {"metallo": {"variants": {"common": "+radiation +cyborg",
                                  "gpu": {"nvidia": "+inteligence",
                                          "none": "~cuda"},
@@ -37,7 +36,7 @@ pkg3 = {"metallo": {"variants": {"common": "+radiation +cyborg",
                   }
         }
 
-odts = {'gpu': 'nvidia', 'mpi': 'infiniband'}
+odts = {'gpu': 'nvidia', 'mpi': 'infiniband', 'gnu': 'xpto'}
 
 # which platform ODITIES concern this package ?
 def package_odities(plat_odts: dict, pkg_varts: dict) -> list:
@@ -54,7 +53,7 @@ def package_odities(plat_odts: dict, pkg_varts: dict) -> list:
 
 # what are the platform RECOMMENDATIONS for this package ?
 def platform_recommendation(plat_odts: dict, pkg_odts: list) -> list:
-    """Returns the platform recomendation for the odities declared by the package.
+    """Returns the platform recomendation for the odities declared in the package.
 
     This function will only return the values specified in the platform dictionary
     for which the key was also declared in the package
@@ -77,7 +76,6 @@ def odts_variants(plat_odts: dict, pkg_varts: dict) -> list:
     recs = platform_recommendation(plat_odts, odts)
     return [ pkg_varts[odt][rec] for odt, rec in zip(odts, recs) ]
 
-
 def print_case(pkg):
     """Print debug info"""
 
@@ -96,10 +94,7 @@ def print_case(pkg):
 # Initial data
 print(f'platform odts: {odts}')
 print()
-print_case(pkg1)
-print()
-print_case(pkg2)
-print()
-print_case(pkg3)
-print()
+for case in [pkg1, pkg2, pkg3]:
+    print_case(case)
+    print()
 
