@@ -1,0 +1,16 @@
+spack_release: v0.20.0
+stack_release: amigne
+
+# Path definitions
+work_directory: /ssoft/spack
+python_venv: py3-venv
+spack_external: external
+jenkins: jenkins/deploy/scripts
+extensions: spack-config
+spack: spack
+spack_sdploy: spack-sdploy
+stack_version: v1
+spack_licences: licences
+
+environments:
+  - helvetios

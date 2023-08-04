@@ -1,0 +1,252 @@
+# THE CORE  --------------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+core:
+  metadata:
+    section: core
+  compiler: <core_compiler>
+
+# PROGRAMMING ENVIRONMENTS  ----------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+gcc:
+  metadata:
+    section: pe
+  stable:
+    # str
+    compiler: gcc@11.3.0
+    # [dict, dict]
+    mpi:
+      - openmpi:
+          version: 4.1.3
+          variants:
+            common: schedulers=slurm
+            mpi:
+              infiniband: +pmi
+              ethernet: fabrics=verbs
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+          dependencies:
+            - hwloc ~libxml2
+      - mvapich2@2.3.7:
+          variants:
+            common: schedulers=slurm
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+    # [str, str]
+    blas:
+      - openblas@0.3.20 threads=none +locking
+      - atlas@3.11.41
+    # dict
+    python:
+      python:
+        variants: <python3> +tkinter +optimizations ~debug +ssl ~libxml2
+    # [str, dict]
+    gpu:
+      - pkg1
+      - pkg2:
+          variants: +spec
+  future:
+    compiler: gcc@12.1.0
+    mpi:
+      - openmpi:
+          version: 5.1.1
+          variants:
+            common: schedulers=slurm
+            mpi:
+              infiniband: +pmi
+              ethernet: fabrics=verbs
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+          dependencies:
+            - hwloc ~libxml2
+      - mvapich2@4.0:
+          variants:
+            common: schedulers=slurm
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+    blas:
+      - openblas@0.4.13 threads=none +locking
+      - atlas@3.21.62
+    python: python@4.1 +tkinter +optimizations ~debug +ssl ~libxml2
+# ------------------------------------------------------------------------------
+intel:
+  metadata:
+    section: pe
+  stable:
+    compiler: intel2021.0.6
+    mpi:
+      - intelmpi:
+          version: 2021.10.0
+          variants:
+            common: schedulers=slurm
+            mpi:
+              infiniband: +pmi
+              ethernet: fabrics=verbs
+            gpu:
+              nvidia: +cuda
+              none: ~cuda
+    blas:
+      - intelmkl@2023.0.4 threads=none +locking
+    python: python@<python3> +tkinter +optimizations ~debug +ssl ~libxml2
+  future::
+    compiler: intel@2023.0.3
+    mpi:
+      - intelmpi:
+          version: 2022
+          variants:
+            common: schedulers=slurm
+            mpi:
+              infiniband: +pmi
+              ethernet: fabrics=verbs
+    blas: intelmkl@2019
+    python: python@4.1 +tkinter +optimizations ~debug +ssl ~libxml2
+
+# PACKAGE DEFINITIONS ----------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+packages:
+  metadata: {section: packages }
+  pe: [core]
+  packages:
+    # Simple spec
+    - spec
+    # Variants can be added immediatly after the package name
+    - spec having a lot of variants
+    # VERSION -----------------------------------------------------------------
+    #
+    # Version can be declared using the `version` keyword
+    - pkg:
+        version: 4.1.0
+    # VARIANTS (00) ------------------------------------------------------------
+    #
+    # Variants can also be added using the variants keyword
+    - pkg1:
+        variants: +zlib~readline
+    # DEPENDENCIES (10) --------------------------------------------------------
+    # 
+    # The following construct add a package with dependencies to spack.yaml
+    # - package5^dep1^dep2
+    - package10:
+        dependencies:
+        - dep1
+        - dep2
+    # We can specify the variants alongside the dependencies:
+    # - package6+var1~var2^dep1^dep2
+    - package11:
+        variants: +var1~var2
+        dependencies:
+        - dep1
+        - dep2
+    # We can also specify the variants of the dependencies:
+    # - package7 +var1~var2 ^dep1+var3~var4 ^dep2~var5+var6
+    - package12:
+        variants: +var1~var2
+        dependencies:
+        - dep1+var3~var4
+        - dep2~var5+var6
+    # ODITIES ------------------------------------------------------------------
+    #
+    # Adding odities to simple spec
+    - package9:
+        gpu:
+          nvidia: +cuda +nvml ~rocm
+          amd: +rocm ~cuda
+    # Odities when variants are declared at package name level
+    - package10+var1~var2:
+        gpu:
+          nvidia: +cuda +nvml ~rocm
+          amd: +rocm ~cuda
+    # Odities and the `variants` keyword
+    - package11:
+        variants: +var1~var2
+        gpu:
+          nvidia: uma cena à maneira
+          amd: +rocm ~cuda
+    # Odities and the `dependencies` keyword
+    - package12:
+        variants: +var1~var2
+        dependencies:
+        - dep1+var3~var4
+        - dep2~var5+var6
+        gpu:
+          nvidia: uma cena à maneira
+          amd: +rocm ~cuda
+    # Odities with both `variants` and `dependencies` keywords
+    - package13:
+        variants: +var1~var2
+        dependencies:
+        - dep1+var3~var4
+        - dep2~var5+var6
+        gpu:
+          nvidia: uma cena à maneira
+          amd: +rocm ~cuda
+
+    # DEFAULT (80)--------------------------------------------------------------
+    #
+    #   spack.yaml: package81
+    # package.yaml: package81+pkg_var
+    - package81:
+        default:
+          variants: +pkg_var
+    #   spack.yaml: package82+spk_var
+    # package.yaml: package82~pkg_var
+    - package82:
+        variants: +spk_var
+        default:
+          variants: +pkg_var
+    #   spack.yaml: package83+common+spk_var
+    # package.yaml: package83+common+pkg_var
+    - package83+common:
+        variants: +spk_var
+        default:
+          variants: +pkg_var
+    #   spack.yaml: package84+common+spk_var
+    # package.yaml: package84+common+pkg_var
+    - package84:
+        default:
+          variants: +pkg_var
+          odt:
+            odt1: var1
+            odt2: var2
+
+
+
+    # BOOLEANS (90)-------------------------------------------------------------
+    #
+    # blacklist
+    - package91:
+        blacklist: true
+    # activated
+    - package92:
+        activated: true
+    # autoload
+    - package93:
+        autoload: true
+
+# ILLEGAL CONTRUCTS ------------------------------------------------------------
+#
+#
+# ------------------------------------------------------------------------------
+#
+# This does not throw an error, but it is invalid spack syntax.
+# Spack will think the package is called package3 +a1~b2.
+#    - package3 +a1~b2:
+#        default:
+#          variants: +include~exclude
+
+# UNKOWN KEYWORDS --------------------------------------------------------------
+# 
+#
+# ------------------------------------------------------------------------------
+# Adding valid yaml syntax does not break the workflow. package9 will be added
+# to the stack and but not expected keywords will not have any effect.
+    - package9:
+        not_defined_yet_feature: true

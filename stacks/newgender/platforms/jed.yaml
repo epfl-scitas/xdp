@@ -1,0 +1,22 @@
+platform:
+  # An error occurs if a package do not have the option
+  # for the filter defined here.
+  # EX: if you define here `gpu: arm51` and you don't
+  #     define the variant for the arm51 in the stack
+  #     then an error occurs.
+  filters:
+    gpu: nvidia
+    mpi: infiniband
+    tex: latex # tex filter does not appear in the stack
+  tokens:
+    cuda_arch: complex
+    core_compiler: gcc@8.5.0 arch=linux-rhel8-x86_64_v2
+    python3: 3.10.4
+    target: icelake
+    os: rhel8
+    lmod_root: jed
+    lmod_arch: linux-rhel8-x86_64
+    jdk_version: 1.8.0_332
+    slurm_version: 22-05-6
+    core_per_socket: 72
+    external_prefix: /ssoft/spack/external
