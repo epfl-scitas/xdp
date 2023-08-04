@@ -95,14 +95,14 @@ class Config(object):
             if conf.data['config']['prefix']:
                 self.prefix = conf.data['config']['prefix'] # from xdp.yaml
 
-        # stack:
+        # stack (str) name of the stack
         if args.stack:
             self.stack = args.stack
         elif 'stack' in conf.data['config']:
             if conf.data['config']['stack']:
                 self.stack = conf.data['config']['stack']
 
-        # platform:
+        # platform (str) name of the platform
         if args.platform:
             self.platform = args.platform
         elif 'platform' in conf.data['config']:
