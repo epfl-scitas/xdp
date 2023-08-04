@@ -130,7 +130,6 @@ platform:
 In the previous example we see how filters and tokens can be declared in the
 platform file. Later on we will see how they apply in the stack file.
 ## putting it all together
-### commons file
 ### the PE key
 The core compiler does a good job, but for software that can leverage the power
 of the latest features present in high end CPUs, a modern compiler would be a
