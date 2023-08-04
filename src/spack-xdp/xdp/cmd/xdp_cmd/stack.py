@@ -36,7 +36,7 @@ class Stack:
     def __init__(self, config):
         """Declare class structs"""
 
-        # Data attributes | path to filenames
+        # Data attributes
         self.stack = self.read(config.stack_yaml)
         self.common = self.read(config.commons_yaml)
         self.platform = self.read(config.platform_yaml)
@@ -44,26 +44,47 @@ class Stack:
         # Replace tokens
         self.replace_tokens()
 
-        # Apply filters
-        # self.apply_filters()
-
     def __str__(self):
-        print('in method __str__ from Stack class')
         return json.dumps(self.stack, sort_keys=True, indent=4)
 
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    #
-    #
-    # HOT METHODS
-    #
-    #
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    def __repr__(self):
+        return json.dumps(self.stack, sort_keys=True, indent=4)
 
     @property
-    def pe(self) -> dict:
-        """Return `pe` object"""
+    def pe(self) -> list:
+        """Return list of `pe` objects"""
 
-        return PE(self.get_pe())
+        return [ PE(k,v) for k,v in self.get_section('pe').items() ]
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    #
+    #
+    # INTERNAL METHODS
+    #
+    #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+    def get_section(self, section: str) -> dict:
+        """Return `section` key from stack dictionary"""
+        return self.group_sections(copy.deepcopy(self.stack), section)
+
+    # There is no reason to have dic as parameter / this method is not general
+    # enough to have dic as parameter. Must identify all methods calling this.
+    def group_sections(self, dic: dict, section: str) -> dict:
+        """Returns dictionary composed of common sections.
+
+        stack.yaml may contain different keys that identify a PE entry or
+        a PackageList entry. This method reads the metadata attribute of
+        the key and returns the requested section."""
+
+        tmp = {}
+        for k, v in dic.items():
+            if 'metadata' not in v:
+                print(f'group_sections: metadata key not found')
+            if v['metadata']['section'] == section:
+                tmp[k] = copy.copy(v)
+                tmp[k].pop('metadata')
+        return tmp
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
@@ -84,28 +105,10 @@ class Stack:
         """Return `pe` key from stack dictionary"""
         return self.group_sections(copy.deepcopy(self.stack), 'pe')
 
-    # NEW SET OF METHODS
-    @property
-    def pes(self) -> list:
-        """Return list of PE objects"""
-
-        st()
-        print('entering pes')
-        tmp =  self.get_section('pe')
-        for pe in tmp:
-            a = PE()
-
-#    def pe(self) -> dict:
-#        """Return `pe` key from stack dictionary"""
-#        return self.get_section('pe')
-
     def pkgs(self) -> dict:
         """Return `packages` key from stack dictionary"""
         return self.get_section('packages')
 
-    def get_section(self, section: str) -> dict:
-        """Return `section` key from stack dictionary"""
-        return self.group_sections(copy.deepcopy(self.stack), section)
 
     def tokens(self) -> dict:
         """Return token keys from platform dictionary"""
@@ -164,40 +167,22 @@ class Stack:
 
         pass
 
-    def group_sections(self, dic: dict, section: str) -> dict:
-        """Returns dictionary composed of common sections.
 
-        stack.yaml may contain different keys that identify a PE entry or
-        a PackageList entry. This method reads the metadata attribute of
-        the key and returns the requested section."""
-
-        # TODO this method could accept section as a list and therefore
-        #      group more than one section type.
-
-        tmp = {}
-        for k, v in dic.items():
-            if 'metadata' not in v:
-                tty.debug(f'group_sections: metadata key not found')
-            if v['metadata']['section'] == section:
-                tmp[k] = copy.copy(v)
-                tmp[k].pop('metadata')
-        return tmp
-
-    def apply_filters(self, debug = False) -> dict:
-        """Returns PE with filters applied"""
-
-        pe = self.get_pe()
-        for _, stack in pe.items():
-            for _, stack_env in stack.items():
-                for fltr in self.filters().keys():
-                    if fltr in stack_env and isinstance(stack_env[fltr], dict):
-                        # write in place
-                        stack_env[fltr] = stack_env[fltr][self.filters()[fltr]]
-
-        # optional return value since pe is a shallow copy
-        if debug:
-            print(pe)
-        return pe
+#    def apply_filters(self, debug = False) -> dict:
+#        """Returns PE with filters applied"""
+#
+#        pe = self.get_pe()
+#        for _, stack in pe.items():
+#            for _, stack_env in stack.items():
+#                for fltr in self.filters().keys():
+#                    if fltr in stack_env and isinstance(stack_env[fltr], dict):
+#                        # write in place
+#                        stack_env[fltr] = stack_env[fltr][self.filters()[fltr]]
+#
+#        # optional return value since pe is a shallow copy
+#        if debug:
+#            print(pe)
+#        return pe
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     #
@@ -570,78 +555,9 @@ class PackageList:
     def __str__(self):
         return json.dumps(self.definitions(), sort_keys=True, indent=4)
 
-class Package(Stack):
-    def __init__(self, pkg):
-        # pkg can be a string or a dictionary
-        if isinstance(pkg, dict):
-            self.pkg = list(pkg.keys())[0]
 
-    def dependencies(self) -> str:
-        """Return package dependencies"""
-
-        # `dependencies` can be a list (of specs) or a dictionary containing the
-        # key `common` which is a list (of specs) and optionally a dictionary
-        # containing the filters whose key would be the filter name.
-
-        tty.debug(f'Entering function: {inspect.stack()[0][3]}')
-
-        # deps = []
-        # # We are just checking that version_attributes is not a structure (dict, list, etc)
-        # if isinstance(self.dependencies_attributes, list):
-        #     dependencies = dependencies_attributes
-        # else:
-        #     dependencies = self._handle_filter(dependencies_attributes)
-        # 
-        # return(self._remove_newline(' ^' + ' ^'.join(dependencies)))
-
-        deps = []
-        if 'dependencies' in self.pkg:
-            d = self.pkg['dependencies']
-            if isinstance(d, list):
-                deps.append(d)
-            if 'common' in d:
-                deps.append(d['common'])
-
-
-
-
-    def variants(self):
-        """Return package variants"""
-        pass
-
-    def version(self):
-        """Return package version"""
-        pass
-
-    def filters(self):
-        """Return package filters"""
-        pass
-
-    def spec() -> str:
-        """Returns package spec string based on package attributes
-
-        This method is responsible for processing the attributes
-        included in the package dictionary writen in the stack file.
-        The dictionary structure is like:
-
-          pkg:
-            default: <...>
-            version: <...>
-            variants: <...>
-            dependencies:
-              - <...>
-            filters:
-              filter_1: <...>
-            externals: <...>
-
-        This method returns all the information above concatenated in
-        a single line according to what spack is expecting.
-        """
-
-class Release:
-
-    # Temporary define here the platform odities
-    plat_odts = {'gpu': 'nvidia', 'mpi': 'infiniband', 'gnu': 'xpto'}
+# Does this really makes sense ?
+class Default:
 
     def __init__(self, data):
         self.data = data
@@ -650,7 +566,126 @@ class Release:
         return f'{self.data}'
 
     def __repr__(self):
-        return f'{self.data.keys()}'
+        return f'{self.data}'
+
+    def version(self):
+        """Return package version"""
+        pass
+
+    def variants(self):
+        """Return package variants"""
+        pass
+
+    def dependencies(self):
+        """Return package version"""
+        pass
+
+    def odities(self):
+        """Return package version"""
+        pass
+
+class Package:
+
+    def __init__(self, data):
+        #st()
+        #print('init method Package class')
+        #if isinstance(data, str):
+        self.data = data
+
+    def __str__(self):
+        return f'{self.data}'
+
+    def __repr__(self):
+        return f'{self.data}'
+
+    @property
+    def spec(self) -> str:
+        """Return package spec"""
+
+        if isinstance(self.data, str):
+            result = self.data
+
+        if isinstance(self.data, list):
+            for pkg in self.data:
+
+            result = self.data
+
+    # --------------------------------------------------------------------------
+
+    def externals(self):
+        """Return package version"""
+        pass
+
+    def default(self):
+        """Return package version"""
+        pass
+
+    def autoload(self):
+        """Return True if package contains the autoload flag"""
+        pass
+
+    def blacklist(self):
+        """Return True if package contains the blacklist flag"""
+        pass
+
+    def activated(self):
+        """Return True if package contains the activated flag"""
+        pass
+
+# ### <REGARDE VOIR> ###
+#
+# SE TIVERMOS UMA LISTA DE OBJECTOS PACKAGE, PODEMOS DEPOIS
+# APLICAR A FUNÇÃO MAP E OBTER ASSIM A LISTA DE SPECS.
+
+class Definition:
+    # A Definition can be a string (compiler: gcc@11.3.0),
+    # a list of strings (mpi: [openmpi@4.1.0, mvapich@2.3.7]),
+    # a list of dicts or even a list of mixed elements.
+
+    def __init__(self, name, data):
+        self.data = self.make_package(data)
+        self.name = name
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def __repr__(self):
+        return f'{self.name}'
+
+    def make_package(self):
+        if isinstance(self.data, str):
+            result = self.data
+
+        if isinstance(self.data, dict):
+            result = self.data
+
+        if isinstance(self.data, list):
+            for pkg in self.data:
+
+    def specs(self) -> list:
+        """Return list of specs/strings contained in definition
+        after having resolved complex packages"""
+        # each spec is a string as it is expected by spack.yaml
+        pass
+
+class Release:
+
+    def __init__(self, name, data):
+        self.data = data
+        self.name = name
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def __repr__(self):
+        return f'{self.name}'
+
+    @property
+    def definitions(self) -> list:
+        """Return list of Definition objects"""
+        return [ Definition(defi,libr) for defi,libr in self.data.items() ]
+
+    # --------------------------------------------------------------------------
 
     @property
     def compiler(self) -> str:
@@ -708,35 +743,31 @@ class Release:
         pass
 
 class PE:
-    """Return PE object
-
-    REMARKS:
-    > Only one compiler is allowed per PE
-    """
-    def __init__(self, data):
+    """Return PE object"""
+    def __init__(self, name, data):
         self.data = data
+        self.name = name
 
     def __str__(self):
-        return f'{self.data}'
+        return f'{self.name}'
 
     def __repr__(self):
-        return f'{self.data}'
+        return f'{self.name}'
+
+    @property
+    def releases(self) -> list:
+        """Return list of Release objects"""
+        return [ Release(rels,defs) for rels,defs in self.data.items() ]
+
+    # --------------------------------------------------------------------------
 
     @property
     def list(self) -> dict:
         """Return `pe` object"""
 
-        return PE(self.get_pe())
-
-    @property
-    def name(self) -> str:
-        """Returns first key found in Yaml"""
-        return list(self.data.keys())[0]
-
-    @property
-    def releases(self) -> list:
-        """Return available releases"""
-        return list(self.data[self.name].keys())
+        # This is returning a list of strings.
+        # Would be nicer to return list of objects.
+        return list(self.data.keys())
 
     @property
     def stable(self) -> dict:
@@ -759,17 +790,3 @@ class PE:
         except:
             print(f'{self.name} has no {release} release')
             return None
-
-    def definitions(self):
-        """Returns PE definitions"""
-
-        # expected output:
-        #
-        #   {
-        #       'gcc_stable_compiler': 'gcc@11.3.0',
-        #       'gcc_stable_mpi': 'openmpi@4.1.3 on infiniband',
-        #       'gcc_stable_blas': 'openblas@0.3.20 threads=none +locking'
-        #       ...
-        #   }
-
-        pass
