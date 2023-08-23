@@ -1,29 +1,48 @@
 # xdp
 
-eXtended Deploy - define and deploy a software stack over different architectures using Spack
+eXtended Deploy - define and deploy a software stack over different
+architectures using Spack
 
-## general overview
+## main purpose and general overview
 
-The goal of xdp is to install a software stack (defined by the stack file) on a given
-platform (defined by the platform file). The design enables xdp to install the same
-software stack over different hardware architectures.
+The goal of xdp is to install a software stack (declared in the stack file) on
+a given platform (declared in the platform file). This enables `xdp` to install
+the exactly same software stack over different hardware architectures, provided
+their distinguishing characteristics in the platform file.
 
-This generality is acheived through the use of `filters` and `tokens` which are two
-concepts used by xdp to read data from the platform file and write the manifest
-that spack is waiting for to install the stack.
+This is acheived through the use of `tokens` and `oddities` which are the two
+concepts used by `xdp` to deploy the stack taking advantage of all the
+particular features of the target architecture such as gpu acceleration, high
+performance fabrics, and various OS related libaries.
 
-Using the filtering mechanism xdp can read the fabrics interconnect declared in the
-platform file and `chose` the corresponding set of variants in the stack file when
-installing the MPI library.
+A `token` can be seen as a sticker that is provided by the platform and will be
+applied in the stack file where needed. It can be used to defined the python
+version or the target architecture.
 
-Using the tokens mechanism xdp can read in the platform file for the compiler provided
-by the platform OS and then `replace` it in the stack file where needed.
+An `oddity` is a particulariry of the platform that is able to influence the
+compilation options of a package. For example, it can be used to compile a
+package with GPU support on platforms equipped with acceleration but do not add
+this option if the platform file does not specify GPU acceleration.
 
-Using this technique xdp can install the same software stack in platforms having
-different specifications and arhitectures provided their differences have previously
-been identified in the platform file. Each system should provide it's own platform file.
+`xdp` can be integrated into any CI/CD pipeline like Jenkins or Gitlab CI and
+thus automate the stack deployment process.
+
+## software architecture
+
+The main object is the stack. A stack comprises programming environment (PE)
+objects and package list objects.
+
+A PE is used to declare compilers and notable libraries like CUDA and MPI that
+should be used as dependencies when compiling packages declared in package lists.
+Package lists are used to aggregate packages having in common these dependencies.
+
+Conceptually speaking, a PE contains one or more Releases. One Release contains
+one or more Definitions and one Definitions contains one or more Packages.
+
+A PackageList is just a Definition with more attributes.
 
 ## the stack file
+
 This is the main file where the packages to be installed are listed. Everything is done
 using YAML syntax. This file will also contain a section to declare the compiler to use
 as well as other notable libraries such as a linear algebra library, GPU driver, python
@@ -34,6 +53,8 @@ This file contains three types of root keys:
 + keys for declaring the PEs (more than one are allowed)
 + keys to declare the package lists (more than one are allowed)
 
+The structure of the stack file with the three root keys is illustrated below:
+
 ```yaml
 core:
   ...
@@ -43,18 +64,21 @@ pkg_list:
   ...
 ```
 ### the core key
-This key is used to declare the core compiler. The syntax of the block is the following:
+
+This key is used to declare the core compiler. The core compiler is the compiler
+provided by the OS. The syntax of the `core` block is the following:
+
 ```yaml
 core:
-  metadata:
-    section: core
   compiler: gcc@13.1.0
 ```
-For the moment this key has no other functionality, but we do need to declare the core
-compiler because we will need it to compile other software. In future this information
-could be placed in a different location, as it does not add something new (the compiler
-is already installed) and it could be classified as information related to the computing
-platform. We will see later that we have a special place for the platform.
+For the moment this key has no other functionality, but we do need to declare
+the core compiler because we will need it to compile the compilers that we will
+later appear in our stack. In the future this information could be placed in a
+different location, as it does not add something new (the compiler is already
+installed) and it could be classified as information related to the computing
+platform and therefore be placed in the platform file.
+
 + This key can be named anything, but it is convinient to call it by the name of the
 functionality it provides: `core` (>>>TO CONFIRM<<<).
 + The section key must contain the value `core` (mandatory)
@@ -63,9 +87,52 @@ functionality it provides: `core` (>>>TO CONFIRM<<<).
 for the core compiler and use it in the matrix definitions. Right now it seems that we
 are kind of forcing the `core` key which can easely be done in the background and provide
 a cleaner stack file, with less stuff to dictract users attention.
-+ The metada key for the `core` key is not needed since we are already forcing
-the key to be named core (are we ?).
++ The metadat key for the `core` key is not needed since we are already forcing
+the key to be named core (>>>TO CONFIRM<<<).
+
+### the programming environment (PE) object
+
+The PE key is used to declare the stack compiler and notable dependencies like
+Python, CUDA and BLAS libraries. Furthermore, the PE is versioned in releases
+using apropriate naming conventions like `deprecated`, `stable` and `future`.
+These names are not mandatory, but they hint you on the purpose of the release.
+Finaly, each release has its own set of definitions. A definition is just a list
+of spack specs.
+
+A very simple PE containing only two releases and one compiler per release could
+be declared like this:
+
+```yaml
+gcc:
+  stable:
+    compiler: gcc@11.3.0
+  future:
+    compiler: gcc@12.1.0
+```
+
+### definitions
+
+A `definition` is the core YAML element to declare a package. A definition can
+be a string or a list. If it is a list, its elements can be strings or
+dictionaries. Finaly, a single list may contain a mix of string elements and
+dictionary elements.
+
+The following is are the three examples of definitions: string, li
+```yaml
+compiler: gcc@11.3.0
+mpi:
+  - openmpi:
+      mpi:
+        infiniband: +pmi
+        ethernet: fabrics=verbs
+  - mvapich2
+blas:
+  - openblas+locking
+  - atlas@3.11.41
+```
+
 ### the package list key
+
 The package list key is used to declare the set of packages to be installed.
 
 ```yaml
