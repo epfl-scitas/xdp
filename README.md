@@ -93,7 +93,7 @@ the key to be named core (>>>TO CONFIRM<<<).
 ### the programming environment (PE) object
 
 The PE key is used to declare the stack compiler and notable dependencies like
-Python, CUDA and BLAS libraries. Furthermore, the PE is versioned in releases
+    Python, CUDA and BLAS libraries. Furthermore, the PE is versioned in releases
 using apropriate naming conventions like `deprecated`, `stable` and `future`.
 These names are not mandatory, but they hint you on the purpose of the release.
 Finaly, each release has its own set of definitions. A definition is just a list
@@ -117,7 +117,7 @@ be a string or a list. If it is a list, its elements can be strings or
 dictionaries. Finaly, a single list may contain a mix of string elements and
 dictionary elements.
 
-The following is are the three examples of definitions: string, li
+Three different definitions: string, list of dict and string and list of strings.
 ```yaml
 compiler: gcc@11.3.0
 mpi:

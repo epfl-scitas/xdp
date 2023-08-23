@@ -112,7 +112,6 @@ def manifest(parser, args):
     # data['pkgs_specs'] = stack.pkgs.specs
     # stack.write_yaml(data = data)
 
-
 def packages(parser, args):
     print(f'this is packages command')
 
