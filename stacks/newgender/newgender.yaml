@@ -43,8 +43,8 @@ gcc:
       - atlas@3.11.41
     # dict
     python:
-      python:
-        variants: <python3> +tkinter +optimizations ~debug +ssl ~libxml2
+      - python:
+          variants: <python3> +tkinter +optimizations ~debug +ssl ~libxml2
     # [str, dict]
     gpu:
       - pkg1
@@ -95,7 +95,7 @@ intel:
     blas:
       - intelmkl@2023.0.4 threads=none +locking
     python: python@<python3> +tkinter +optimizations ~debug +ssl ~libxml2
-  future::
+  future:
     compiler: intel@2023.0.3
     mpi:
       - intelmpi:

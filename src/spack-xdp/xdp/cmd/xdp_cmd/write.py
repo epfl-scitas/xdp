@@ -5,6 +5,7 @@ section = "SCITAS"
 level = "short"
 
 from pdb import set_trace as st
+from collections.abc import MutableMapping
 import llnl.util.tty as tty
 
 import spack.extensions.xdp.cmd.xdp_cmd.xdp_config as xdp_config
@@ -31,7 +32,6 @@ def add_command(subparser):
     # Modules
     modules_parser = sp.add_parser('modules', help = 'write modules yaml configuration')
     modules_parser.add_argument('-mod')
-
 
 # pe.definitions expected output
 #
@@ -77,7 +77,6 @@ def manifest(parser, args):
     stack = Stack(config)
     print(f'stack done')
 
-
 # OLD output
 #
 #   {
@@ -99,19 +98,14 @@ def manifest(parser, args):
 # >>> THE ONLY DIFFERENCE IS THAT THE VALUES ARE LISTS
 # >>> THE TEMPLATES MUST BE UPDATED
 
-    print('stack.pe[0].releases[0].definitions[0].packages')
-
-    st()
-
-    # Because PackageList herits from Definition,
-    # it will also have access to `specs` method
     for p in stack.pe:
         for r in p.releases:
-            for d in r.definition:
-                pe_defs['_'.join([p,r,d.name])] = ' '.join(d.specs)
+            for d in r.definitions:
+                # pe_defs['_'.join([p,r,d.name])] = ' '.join(d.specs)
+                print(f'{p}_{r}_{d}: {d.specs}')
 
+    st()
     data = {}
-
     # data['pe_defs'] = stack.pe.definitions
     # data['pkgs_defs'] = stack.pkgs.definitions
     # data['pe_specs'] = stack.pe.specs

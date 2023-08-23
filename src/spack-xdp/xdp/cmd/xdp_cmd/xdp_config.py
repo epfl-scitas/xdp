@@ -46,6 +46,8 @@ class Config(object):
     def __init__(self, args):
         """Fills configuration options"""
 
+        self.args = args # temporary experiment
+
         # These are the only parameters (4) the user can define at command line.
         # line:prefix, stack and platform can also be defined in environment.
         self.stack = 'carrot'
