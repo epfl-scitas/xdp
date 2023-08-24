@@ -87,7 +87,7 @@ class Config(object):
         self.concretizer_yaml_path = None
 
         conf = ReadYaml()
-        conf.read('xdp.yaml')
+        conf.read(util.get_prefix() + '/etc/xdp.yaml')
         c = conf.data['config']
 
         # prefix:

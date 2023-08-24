@@ -17,10 +17,6 @@
 import os
 import sys
 
-# The following line makes de tracer available
-# every time this module is imported.
-from pdb import set_trace as st
-
 def get_prefix():
     """Return prefix of xdp"""
 
