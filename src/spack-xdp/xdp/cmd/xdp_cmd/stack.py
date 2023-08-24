@@ -239,6 +239,7 @@ class Stack:
             self._write_yaml(output, filename)
 
 class PackageList:
+    # TODO
     # This class is a Definition object which has two more attributes:
     # - pe
     # - dependencies
@@ -251,6 +252,7 @@ class PackageList:
     def __call__(self):
         return json.dumps(self.pkglist, sort_keys=True, indent=4)
 
+    # MOCK UP
     def definitions(self) -> dict:
         """Returns package lists definitions"""
 
@@ -267,19 +269,6 @@ class PackageList:
             dic[lst] = []
             for pkg in lst:
                 dic[lst].append(pkg.spec())
-
-    def specs(self) -> dict:
-        """Returns package lists specs"""
-
-        # expected output:
-        #
-        #   {
-        #       'list1': {'compilers': ['gcc_stable', 'intel_stable']},
-        #       'list2': {'compilers': ['gcc_stable', 'intel_stable'], 'dependencies': ['blas', 'gpu']},
-        #       ...
-        #   }
-
-        pass
 
 class Package:
     # caveats: when a package is defined using a dictionary it must then
